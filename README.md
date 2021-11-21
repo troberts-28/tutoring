@@ -1,2 +1,3 @@
-# tutoring
-Materials for tutoring
+# Code with Tim
+
+Materials for coding tutoring
