@@ -4,16 +4,23 @@ if answer == "yes":
     print("cool, lets play")
 
 if answer== "no":
-    print("well then you suck") 
+    print("well then, you suck")
 
-print("What is Conrad's favourite sport?")
+answer = input("What's Nini's favourite sport? \nA) tennis\nB) netball\nC) basketball \nD) swimming\n")
 
-print("What's Nini's favourite sport?")
+if answer == "D":
+    print("correct :)")
+else:
+    print("incorect dummies :(")
 
-print("What's Tim's favourite computer game?")
+# print("What is Conrad's favourite sport?")
 
-print("What's Conrad's favourite book?")
+# print("What's Nini's favourite sport?")
 
-print("What's Nini's favourite song?")
+# print("What's Tim's favourite computer game?")
 
-print("What's Tim's favourite vegetable?")
+# print("What's Conrad's favourite book?")
+
+# print("What's Nini's favourite song?")
+
+# print("What's Tim's favourite vegetable?")
