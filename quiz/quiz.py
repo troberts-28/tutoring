@@ -1,26 +1,5 @@
-answer = input("Do you want to play? (type yes/no here)")
+print("Welcome to my quiz")
 
-if answer == "yes":
-    print("cool, lets play")
+answer = input("What's the tallest building in the world?")
 
-if answer== "no":
-    print("well then, you suck")
-
-answer = input("What's Nini's favourite sport? \nA) tennis\nB) netball\nC) basketball \nD) swimming\n")
-
-if answer == "D":
-    print("correct :)")
-else:
-    print("incorect dummies :(")
-
-# print("What is Conrad's favourite sport?")
-
-# print("What's Nini's favourite sport?")
-
-# print("What's Tim's favourite computer game?")
-
-# print("What's Conrad's favourite book?")
-
-# print("What's Nini's favourite song?")
-
-# print("What's Tim's favourite vegetable?")
+print(answer)

@@ -1,5 +1,5 @@
 score=0
-total_questions=3
+total_questions=5
 
 print("Welcome to Tim's Quiz")
 answer=input("Are you ready to play the Quiz ? (yes/no) :")
@@ -12,19 +12,33 @@ if answer.lower() == "yes" or answer.lower() == "y":
     else:
         print("Wrong answer :(")
 
-    answer=input("\nQuestion 2: How old is Tim?\nA) 102\nB) 16\nC) 35\nD) 24\n")
+    answer=input("\nQuestion 2: Where is Tim from?\nA) France\nB) London\nC) Norway\nD) Brazil\n")
+    if answer.lower() == "c":
+        score += 1
+        print("Correct! Tim is from Norway :)")
+    else:
+        print("Wrong answer :(")
+    
+    answer=input("\nQuestion 3: How old is Tim?\nA) 102\nB) 16\nC) 35\nD) 25\n")
     if answer.lower() == "d":
         score += 1
-        print("Correct! Tim is 24 :)")
+        print("Correct! Tim is 25 :)")
+    else:
+        print("Wrong answer :(")
+    
+    answer=input("\nQuestion 4: Who is the oldest?\nA) Tim\nB) Python\nC) Google\nD) Justin Bieber\n")
+    if answer.lower() == "b":
+        score += 1
+        print("Correct! Python was first released in 1991 :)")
     else:
         print("Wrong answer :(")
 
-    answer=input("\nQuestion 3: Where is Tim from?\nA) France\nB) London\nC) America\nD) Brazil\n")
-    if answer.lower() == "b":
+    answer=input("\nQuestion 5: Who is the youngest?\nA) Tim\nB) Python\nC) Google\nD) Justin Bieber\n")
+    if answer.lower() == "c":
         score += 1
-        print("Correct! Tim is from London :)")
+        print("Correct! Google was founded in 1998. That's right, Tim lived in a world without Google...")
     else:
-        print("Wrong answer :(")
+        print("Wrong answer :( Google was founded in 1998. That's right, Tim lived in a world without Google...")
     
     print("\nThankyou for playing my quiz! You got", score, "questions correct!")
     mark=(score/total_questions)*100
