@@ -10,6 +10,7 @@ class Player(ppb.Sprite):
     left = keycodes.Left
     right = keycodes.Right
     shoot = keycodes.Space
+    rotation = 90
 
     def on_update(self, update_event, signal):
         if self.direction.x and self.direction.y:
