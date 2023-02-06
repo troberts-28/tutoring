@@ -15,7 +15,7 @@ class Player(ppb.Sprite):
     left = ppb.keycodes.Left
     right_d = ppb.keycodes.D
     right = ppb.keycodes.Right
-    shoot = ppb.keycodes.Space
+    shoot = ppb.keycodes.Up
     shoot_sensitivity = 1
     shoot_direction = ppb.Vector(0, 0)
     shoot_position = ppb.Vector(0, 1)
@@ -24,12 +24,17 @@ class Player(ppb.Sprite):
     noOflives = 5
     image = ppb.Image("assets/sprites/player.png")
 
-    def on_update(self, update_event, signal):
+    def on_update(self, update_event: events.Update, signal):
         if self.direction.x and self.direction.y:
             direction = self.direction.normalize()
         else:
             direction = self.direction
-        self.position += direction * self.speed * update_event.time_delta
+        if (self.position.x > 12 and self.direction.x > 0) or (
+            self.position.x < -12 and self.direction.x < 0
+        ):
+            pass
+        else:
+            self.position += direction * self.speed * update_event.time_delta
 
         if (
             abs(self.rotation) < 60
@@ -83,8 +88,8 @@ class Player(ppb.Sprite):
         if event.button is ppb.buttons.Primary:
             self._fire_bullet(event.scene)
 
-    # def on_mouse_motion(self, event: events.MouseMotion, signal):
-    #     self.mouse_position = event.position
+    def on_mouse_motion(self, event: events.MouseMotion, signal):
+        self.mouse_position = event.position
 
     def _fire_bullet(self, scene):
         scene.add(Projectile(position=self.position, direction=self.shoot_position))
@@ -116,7 +121,7 @@ class Projectile(ppb.Sprite):
             direction = self.direction
 
         self.position += direction * self.speed * update_event.time_delta
-        
+
         if self.is_enemy is False:
             if abs(self.position.x) > 12.2:
                 self.direction = ppb.Vector(-self.direction.x, self.direction.y)
@@ -190,8 +195,8 @@ class Target(ppb.Sprite):
             if p.is_enemy is False:
                 if (p.position - self.position).length <= self.size:
                     update_event.scene.add(Explosion(position=self.position))
-                    update_event.scene.remove(self)
                     update_event.scene.remove(p)
+                    update_event.scene.remove(self)
 
         if self.shoot_time_counter > 1 and self.fire_bullets:
             self._fire_bullet(update_event.scene)

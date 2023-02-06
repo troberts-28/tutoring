@@ -1,5 +1,6 @@
 Deprecated==1.2.13
 ppb==1.1
 ppb-vector==1.0
-PySDL2==0.9.11
-wrapt==1.13.3
+PySDL2==0.9.14
+pysdl2-dll==2.0.20
+wrapt==1.14.1
