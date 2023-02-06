@@ -11,40 +11,38 @@ function RUN() {
     while (i++ < 200) { /* use a counter to limit move time */
       swim(random_direction)
     }
-    stop()
+    stop();
     previous_health = health();
   }
 }
 
-let range
+let range;
 let previous_health = health();
 let angle = Math.random() * 360;
-let res = 2
+let res = 2;
+let swim_stuff = 8;
 
-while (true) {
+while (true) { 
+  swim(swim_stuff)
+  
   while ((range = scan(angle, res)) != Infinity) {
     if (range > 70) { /* out of range, head toward it */
-      drive(angle, 50);
-      RUN()
-      var i = 1;
-      while (i++ < 50) /* use a counter to limit move time */
-        ;
-      RUN()
-      drive (angle, 0);
+      // drive(angle, 50);
+      // var i = 1;
+      // while (i++ < 50) /* use a counter to limit move time */
+      //   ;
+      // drive(angle, 0);
       angle -= 3;
     } else {
-      RUN()
-      while (!cannon(angle, range))
-        ;
-      RUN()
+      stop();
+      cannon(angle, range);
       angle -= 15;
     }
-    RUN()
   }
   angle += res;
   angle %= 360;
   
-  RUN()
+  swim_stuff = swim_stuff - 0.8
 }
 
 // var range;
