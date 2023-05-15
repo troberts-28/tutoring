@@ -135,5 +135,5 @@ class EnemiesLeftLabel(UILabel):
         if number_of_enemies == 0:
             update_event.scene.add(WonLabel())
             signal(ppb.events.ScenePaused)
-
+        
         self.image = ppb.Text(f"{number_of_enemies} left", font=config.default_font, color=(255, 255, 255))

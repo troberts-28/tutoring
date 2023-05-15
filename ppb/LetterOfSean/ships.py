@@ -235,7 +235,6 @@ class Enemy(Ship):
             player_vector = self.player_in_sight.position - self.position
             player_target = (self.player_in_sight.position + self.player_in_sight.facing) - self.position
             self.target_rotation = (self.basis.angle(player_target) + 180) % 360
-            print(f"{str(self)}, {self.target_rotation:.1f}")
             distance = player_vector.length
             if distance < self.projectile_range * 0.7:
                 self.target_rotation = self.player_in_sight.rotation

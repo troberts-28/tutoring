@@ -8,6 +8,7 @@ from effects import Explosion
 
 
 class Player(ppb.Sprite):
+    sprite_id = "player"
     direction = ppb.Vector(0, 0)
     speed = 4
     position = ppb.Vector(0, -8)
@@ -21,7 +22,7 @@ class Player(ppb.Sprite):
     shoot_position = ppb.Vector(0, 1)
     layer = 1
     size = 1.4
-    noOflives = 5
+    health = 100
     image = ppb.Image("assets/sprites/player.png")
 
     def on_update(self, update_event: events.Update, signal):
@@ -44,22 +45,25 @@ class Player(ppb.Sprite):
                 self.shoot_direction * self.speed * update_event.time_delta
             )
             self.rotation = (
-                math.degrees(math.atan2(self.shoot_position.y, self.shoot_position.x))
+                math.degrees(
+                    math.atan2(self.shoot_position.y, self.shoot_position.x)
+                )
                 - 90
             )
 
         for p in update_event.scene.get(kind=Projectile):
             if (
-                p.is_enemy is True and (p.position - self.position).length <= self.size
+                p.is_enemy is True
+                and (p.position - self.position).length <= self.size
             ) or (
                 p.is_enemy is False
                 and (p.position - self.position).length <= self.size / 2
                 and p.existed_for > 20
             ):
-                self.noOflives -= 1
+                self.health -= p.damage
                 update_event.scene.remove(p)
                 update_event.scene.add(Explosion(position=self.position))
-                if self.noOflives == 0:
+                if self.health <= 0:
                     update_event.scene.remove(self)
 
     def on_key_pressed(self, key_event: events.KeyPressed, signal):
@@ -75,9 +79,13 @@ class Player(ppb.Sprite):
             self._fire_bullet(key_event.scene)
 
     def on_key_released(self, key_event: events.KeyReleased, signal):
-        if key_event.key == self.left_a and self.direction == ppb.Vector(-1, 0):
+        if key_event.key == self.left_a and self.direction == ppb.Vector(
+            -1, 0
+        ):
             self.direction += ppb.Vector(1, 0)
-        elif key_event.key == self.right_d and self.direction == ppb.Vector(1, 0):
+        elif key_event.key == self.right_d and self.direction == ppb.Vector(
+            1, 0
+        ):
             self.direction += ppb.Vector(-1, 0)
         elif key_event.key == self.left:
             self.shoot_direction -= ppb.Vector(-1, 0)
@@ -92,7 +100,9 @@ class Player(ppb.Sprite):
         self.mouse_position = event.position
 
     def _fire_bullet(self, scene):
-        scene.add(Projectile(position=self.position, direction=self.shoot_position))
+        scene.add(
+            Projectile(position=self.position, direction=self.shoot_position)
+        )
 
 
 class Projectile(ppb.Sprite):
@@ -102,6 +112,7 @@ class Projectile(ppb.Sprite):
     layer = 2
     is_enemy = False
     existed_for = 0
+    damage = 10
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -124,9 +135,13 @@ class Projectile(ppb.Sprite):
 
         if self.is_enemy is False:
             if abs(self.position.x) > 12.2:
-                self.direction = ppb.Vector(-self.direction.x, self.direction.y)
+                self.direction = ppb.Vector(
+                    -self.direction.x, self.direction.y
+                )
             if abs(self.position.y) > 9:
-                self.direction = ppb.Vector(self.direction.x, -self.direction.y)
+                self.direction = ppb.Vector(
+                    self.direction.x, -self.direction.y
+                )
         elif abs(self.position.x > 15) or abs(self.position.y > 15):
             update_event.scene.remove(self)
 
@@ -165,7 +180,9 @@ class Target(ppb.Sprite):
         if (self.position.x > 11.5 and self.direction.x > 0) or (
             self.position.x < -11.5 and self.direction.x < 0
         ):
-            next_direction = ppb.Vector(self.direction.x * -1, self.direction.y)
+            next_direction = ppb.Vector(
+                self.direction.x * -1, self.direction.y
+            )
         else:
             for p in update_event.scene.get(kind=Projectile):
                 if (
@@ -186,7 +203,9 @@ class Target(ppb.Sprite):
             and self.random_movement
             and self.direction != next_direction
         ):
-            next_direction = random.choice([ppb.Vector(1, 0), ppb.Vector(-1, 0)])
+            next_direction = random.choice(
+                [ppb.Vector(1, 0), ppb.Vector(-1, 0)]
+            )
             self.random_move_time_counter -= 1
 
         self.direction = next_direction
@@ -215,6 +234,32 @@ class Target(ppb.Sprite):
         )
 
 
+class HealthBar(ppb.Sprite):
+    image = ppb.Image("assets/health/Health bar15.png")
+    layer = 2
+    size = 0.8
+    health = 150
+    linked_sprite_id = "player"
+
+    def __init__(self, **props):
+        super().__init__(**props)
+
+    def on_update(self, update_event, signal):
+        try:
+            sprite = next(filter(
+                lambda x: x.sprite_id == self.linked_sprite_id,
+                update_event.scene.get(kind=Player),
+            ))
+            if sprite:
+                print(sprite)
+                self.position = sprite.position + ppb.Vector(0, 1.5)
+                self.image = ppb.Image(
+                    f"assets/health/Health bar{int(sprite.health / 10)}.png"
+                )
+        except:
+            pass
+
+
 class LoadingSprite(ppb.Sprite):
     ready_image = ppb.Image("assets/load/center_filled.png")
     waiting_image = ppb.Image("assets/load/center_empty.png")
@@ -241,23 +286,42 @@ class Label(ppb.Sprite):
     color = (255, 255, 255)
     text = None
     image = None
+    move_with_player = False
 
-    def on_update(self, update_event, signal):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.image = ppb.Text(
             self.text,
-            font=ppb.Font("assets/fonts/ubuntu_font/UbuntuMono-B.ttf", size=40),
+            font=ppb.Font(
+                "assets/fonts/ubuntu_font/UbuntuMono-B.ttf", size=40
+            ),
             color=self.color,
         )
+
+    def on_update(self, update_event, signal):
+        if self.move_with_player:
+            try:
+                player = next(update_event.scene.get(kind=Player))
+                if player:
+                    self.position = player.position + ppb.Vector(0, 2)
+            except:
+                pass
 
 
 class FinishTitle(ppb.Scene):
     def on_scene_started(self, scene_started: ppb.events.SceneStarted, signal):
         self.add(
             GameBackground(
-                background_image=ppb.Image("assets/backgrounds/finishBackground.jpg")
+                background_image=ppb.Image(
+                    "assets/backgrounds/finishBackground.jpg"
+                )
             )
         )
-        self.add(Label(text="You won! You beat the aliens!", size=1, color=(0, 0, 0)))
+        self.add(
+            Label(
+                text="You won! You beat the aliens!", size=1, color=(0, 0, 0)
+            )
+        )
 
 
 class GameOver(ppb.Scene):
@@ -279,13 +343,13 @@ class Level3Game(ppb.Scene):
         super().__init__(*args, **kwargs)
 
     def on_scene_started(self, scene_started: ppb.events.SceneStarted, signal):
-        self.add(
-            Label(
-                text=(str(self.player.noOflives) + " Lives"),
-                position=ppb.Vector(-9, 8),
-                size=1,
-            )
-        )
+        # self.add(
+        #     Label(
+        #         text=(str(self.player.noOflives) + " Lives"),
+        #         position=ppb.Vector(-9, 8),
+        #         size=1,
+        #     )
+        # )
         self.add(self.player)
         self.add(GameBackground())
 
@@ -294,7 +358,9 @@ class Level3Game(ppb.Scene):
                 self.add(
                     Target(
                         position=ppb.Vector(x, y),
-                        direction=random.choice([ppb.Vector(1, 0), ppb.Vector(-1, 0)]),
+                        direction=random.choice(
+                            [ppb.Vector(1, 0), ppb.Vector(-1, 0)]
+                        ),
                         speed=random.choice(list(range(1, 5))),
                         shoot_frequency=5,
                         random_move_frequency=0.1,
@@ -302,8 +368,8 @@ class Level3Game(ppb.Scene):
                 )
 
     def on_update(self, update_event, signal):
-        for label in update_event.scene.get(kind=Label):
-            label.text = str(self.player.noOflives) + " Lives"
+        # for label in update_event.scene.get(kind=Label):
+        #     label.text = str(self.player.noOflives) + " Lives"
         if not any(True for _ in self.get(kind=Target)):
             signal(ppb.events.ReplaceScene(new_scene=self.next_scene))
             signal(ppb.events.StopScene(scene=self))
@@ -320,19 +386,21 @@ class Level3Title(ppb.Scene):
         super().__init__(*args, **kwargs)
 
     def on_scene_started(self, scene_started: ppb.events.SceneStarted, signal):
-        self.add(
-            Label(
-                text=(str(self.player.noOflives) + " Lives"),
-                position=ppb.Vector(-9, 8),
-                size=1,
-            )
-        )
+        # self.add(
+        #     Label(
+        #         text=(str(self.player.noOflives) + " Lives"),
+        #         position=ppb.Vector(-9, 8),
+        #         size=1,
+        #     )
+        # )
         self.add(Label(text="Level 3"))
         self.add(GameBackground())
 
     def on_key_pressed(self, key_event: events.KeyPressed, signal):
         if key_event.key == ppb.keycodes.Space:
-            signal(ppb.events.ReplaceScene(self.next_scene(player=self.player)))
+            signal(
+                ppb.events.ReplaceScene(self.next_scene(player=self.player))
+            )
             signal(ppb.events.StopScene(self))
 
 
@@ -344,13 +412,13 @@ class Level2Game(ppb.Scene):
         super().__init__(*args, **kwargs)
 
     def on_scene_started(self, scene_started: ppb.events.SceneStarted, signal):
-        self.add(
-            Label(
-                text=(str(self.player.noOflives) + " Lives"),
-                position=ppb.Vector(-9, 8),
-                size=1,
-            )
-        )
+        # self.add(
+        #     Label(
+        #         text=(str(self.player.noOflives) + " Lives"),
+        #         position=ppb.Vector(-9, 8),
+        #         size=1,
+        #     )
+        # )
         self.add(self.player)
         self.add(GameBackground())
 
@@ -359,16 +427,20 @@ class Level2Game(ppb.Scene):
                 self.add(
                     Target(
                         position=ppb.Vector(x, y),
-                        direction=random.choice([ppb.Vector(1, 0), ppb.Vector(-1, 0)]),
+                        direction=random.choice(
+                            [ppb.Vector(1, 0), ppb.Vector(-1, 0)]
+                        ),
                         shoot_frequency=8,
                     )
                 )
 
     def on_update(self, update_event, signal):
-        for label in update_event.scene.get(kind=Label):
-            label.text = str(self.player.noOflives) + " Lives"
+        # for label in update_event.scene.get(kind=Label):
+        #     label.text = str(self.player.noOflives) + " Lives"
         if not any(True for _ in self.get(kind=Target)):
-            signal(ppb.events.ReplaceScene(self.next_scene(player=self.player)))
+            signal(
+                ppb.events.ReplaceScene(self.next_scene(player=self.player))
+            )
             signal(ppb.events.StopScene(scene=self))
         if not any(True for _ in self.get(kind=Player)):
             signal(ppb.events.ReplaceScene(new_scene=GameOver))
@@ -383,19 +455,21 @@ class Level2Title(ppb.Scene):
         super().__init__(*args, **kwargs)
 
     def on_scene_started(self, scene_started: ppb.events.SceneStarted, signal):
-        self.add(
-            Label(
-                text=(str(self.player.noOflives) + " Lives"),
-                position=ppb.Vector(-9, 8),
-                size=1,
-            )
-        )
+        # self.add(
+        #     Label(
+        #         text=(str(self.player.noOflives) + " Lives"),
+        #         position=ppb.Vector(-9, 8),
+        #         size=1,
+        #     )
+        # )
         self.add(Label(text="Level 2"))
         self.add(GameBackground())
 
     def on_key_pressed(self, key_event: events.KeyPressed, signal):
         if key_event.key == ppb.keycodes.Space:
-            signal(ppb.events.ReplaceScene(self.next_scene(player=self.player)))
+            signal(
+                ppb.events.ReplaceScene(self.next_scene(player=self.player))
+            )
             signal(ppb.events.StopScene(self))
 
 
@@ -406,15 +480,23 @@ class Level1Game(ppb.Scene):
         super().__init__(*args, **kwargs)
 
     def on_scene_started(self, scene_started: ppb.events.SceneStarted, signal):
-        self.add(Player(noOfLives=5, direction=ppb.Vector(0, 0)))
-        self.add(Label(text="5 Lives", position=ppb.Vector(-9, 8), size=1))
+        self.add(
+            Player(
+                direction=ppb.Vector(0, 0),
+                position=ppb.Vector(0, -8),
+                health=150,
+            )
+        )
+        self.add(HealthBar(position=ppb.Vector(0, -8), health=150))
         self.add(GameBackground())
 
         for x in range(-4, 5, 2):
             self.add(
                 Target(
                     position=ppb.Vector(x, 3),
-                    direction=random.choice([ppb.Vector(1, 0), ppb.Vector(-1, 0)]),
+                    direction=random.choice(
+                        [ppb.Vector(1, 0), ppb.Vector(-1, 0)]
+                    ),
                     random_movement=True,
                     shoot_frequency=9,
                 )
@@ -424,8 +506,8 @@ class Level1Game(ppb.Scene):
         player = Player()
         for player_object in update_event.scene.get(kind=Player):
             player = player_object
-        for label in update_event.scene.get(kind=Label):
-            label.text = str(player.noOflives) + " Lives"
+        # for label in update_event.scene.get(kind=Label):
+        #     label.text = str(player.noOflives) + " Lives"
         if not any(True for _ in self.get(kind=Target)):
             signal(ppb.events.ReplaceScene(self.next_scene(player=player)))
             signal(ppb.events.StopScene(scene=self))
@@ -459,7 +541,9 @@ class LoadScreen(loadingscene.BaseLoadingScene):
             ready_image=ppb.Image("assets/load/left_filled.png"),
             waiting_image=ppb.Image("assets/load/left_empty.png"),
         )
-        center = [LoadingSprite(position=ppb.Vector(x, 0)) for x in range(-3, 4)]
+        center = [
+            LoadingSprite(position=ppb.Vector(x, 0)) for x in range(-3, 4)
+        ]
         right = LoadingSprite(
             position=ppb.Vector(4, 0),
             ready_image=ppb.Image("assets/load/right_filled.png"),
